@@ -32,6 +32,36 @@ npm install
 ng serve
 ```
 
+## Monitoring
+
+**Infra (Docker containers):**
+
+```bash
+cd infra
+docker compose ps                    # status of Kafka, MongoDB, kafka-ui, mongo-express
+docker compose logs -f <service>     # e.g. kafka, mongo
+```
+
+- Kafka UI: http://localhost:8090
+- Mongo Express: http://localhost:8091
+
+**Spring Boot services** (run individually on Day 1, not containerized — see SPEC.md §7/§8):
+
+Each service logs to stdout; redirect to a file if running in the background, e.g.:
+
+```bash
+nohup java -jar target/<service>-*.jar > /tmp/<service>.log 2>&1 &
+tail -f /tmp/<service>.log
+```
+
+Each also exposes Spring Boot Actuator for health/metrics without needing the logs:
+
+| Service | Port | Health endpoint | Manual trigger |
+|---|---|---|---|
+| call-generator | 8081 | `GET /actuator/health` | `POST /api/calls/generate` |
+
+(Add a row here as each new service comes online.)
+
 ## How to use this with Claude Code
 
 Open this repo in Claude Code and start with:
@@ -42,4 +72,6 @@ Work through `TASKS.md` in order — each task maps to an FR ID in `SPEC.md`.
 
 ## Status
 
-Design/documentation phase complete (SPEC.md, TASKS.md, README.md). Implementation not yet started.
+- **Task 0 (infra bootstrap)** — done, verified: all four containers (Kafka, MongoDB, kafka-ui, mongo-express) start healthy via `docker-compose up -d`; both UIs reachable.
+- **Task 1 (Call Generator, FR1)** — done, verified: `call-completed` event confirmed directly on the Kafka topic (not just app logs), correct key/payload.
+- Tasks 2-8 not yet started.
