@@ -1,0 +1,194 @@
+# Call Insights Pipeline — SPEC.md
+
+## 0. Purpose & Guardrails
+
+**Purpose:** A skill-building project to gain current, demonstrable hands-on depth with Kafka Streams event orchestration, microservice architecture, multi-provider LLM integration, and a full-stack (Angular + Spring Boot) supervisor tool — closing specific gaps between the resume and target job postings (Kafka Streams named as a preferred skill at JPMorgan Chase and others).
+
+**Guardrail (non-negotiable):** This is an entirely **synthetic** rebuild.
+- Own fake call-metadata generator.
+- Own dummy media files.
+- Own template/keyword scoring rules.
+- **Never** AudioCodes/SmartTAP's real code, data, proprietary scoring logic, or credentials.
+- The real SmartTAP system is referenced only at the architecture-pattern level (event-driven, pluggable storage) — never its implementation.
+
+**Resume ground rule (from the broader backlog):** a skill only goes on the resume once this is actually built and run — this SPEC is the design; it is not itself evidence of completion.
+
+---
+
+## 1. Problem Statement
+
+Build a synthetic, event-driven agent-evaluation platform: when a call recording completes, the system automatically transcribes it, generates an insights/summary, and evaluates the agent's performance against a template — all pluggable across multiple LLM providers. A supervisor can log in, browse call records, view generated artifacts, and manually delete or regenerate any artifact (optionally choosing a different model provider), producing a new version each time. All activity is audit-logged.
+
+---
+
+## 2. Goals (Functional Requirements)
+
+| ID | Requirement |
+|----|-------------|
+| FR1 | Synthetic call-record generator produces call metadata + dummy media, streamed to Blob/local filesystem, with a `call-completed` event published to Kafka |
+| FR2 | Transcription, Summary/Insights, and Evaluation services consume `call-completed` (or regeneration-request) events in parallel and each produce a versioned JSON artifact file, written next to the media |
+| FR3 | A Metadata Consumer writes/updates call + artifact catalog entries in MongoDB (source-of-truth for *location and version*, not content) |
+| FR4 | Frontend (Angular) supports hardcoded-user login, lists call records, and lets a supervisor view existing transcripts/summaries/evaluations |
+| FR5 | Supervisor can trigger generation/regeneration of any artifact, selecting a model provider from a model registry |
+| FR6 | Supervisor can delete an artifact (hard delete); regeneration without prior delete creates a new, incremented version |
+| FR7 | Every generate/delete/regenerate action is recorded in an audit log (who, what, when, which version, which model) |
+| FR8 | A Gateway/BFF (Spring Boot) is the single entry point for the frontend, fronting all backend services |
+
+## 3. Non-Goals (Day 1 / this phase)
+
+- No true real-time/streaming ASR or live keyword spotting, call tagging, or in-call analytics (explicitly deferred — see §7).
+- No OAuth/real identity provider (hardcoded users only; OAuth is a documented future increment).
+- No MySQL (superseded by MongoDB for all structured metadata).
+- No Kubernetes/cloud deployment yet (local-first via Docker Compose; see §8).
+- No RAG/vector DB (separate backlog item, not part of this project).
+- No production-grade security hardening (secrets management, rate limiting, etc.) — noted as future work, not blocking.
+
+---
+
+## 4. Architecture Overview
+
+### 4.1 Service Boundaries
+
+| Service | Responsibility |
+|---|---|
+| **Frontend** (Angular + TypeScript) | Login (hardcoded users), call-record list/detail, artifact viewing, generate/regenerate/delete actions, model-provider selection |
+| **Gateway / BFF** (Spring Boot) | Single entry point for frontend; routes to backend services; aggregates responses |
+| **Call Generator** (Spring Boot) | Synthetic call + media generator; writes media to Blob/local FS; publishes `call-completed` |
+| **Transcription Service** (Spring Boot) | Consumes `call-completed`/regeneration events; calls selected model provider; writes versioned transcript JSON; publishes `call-transcript-generated` |
+| **Summary/Insights Service** (Spring Boot) | Same pattern, produces summary/insights JSON; depends on transcript existing |
+| **Evaluation Service** (Spring Boot) | Same pattern, produces evaluation JSON (rule-based template scoring, not ML); depends on transcript existing |
+| **Metadata Consumer** (Spring Boot) | Consumes all `call-completed` / `*-generated` / delete events; upserts MongoDB catalog + audit log |
+| **Model Registry** (config, not a running service initially) | Maps logical model name → provider, endpoint, credentials-env-var, request shape |
+
+### 4.2 Data Flow (Day 1: post-processing only)
+
+```
+Call Generator
+   │
+   ├──► media file written directly to Blob/local FS (NOT via Kafka)
+   │
+   └──► "call-completed" event → Kafka
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              ▼                      ▼                      ▼
+      Transcription Svc       Summary/Insights Svc    Evaluation Svc
+      (needs media)           (needs transcript)      (needs transcript)
+              │                      │                      │
+              └── writes {artifact}_v{n}.json next to media (Blob/local FS) ──┘
+              │                      │                      │
+              └──────────────────────┴──────────────────────┘
+                                     │
+                      "call-{artifact}-generated" event → Kafka
+                                     │
+                                     ▼
+                          Metadata Consumer
+                                     │
+                                     ▼
+                    MongoDB (catalog + audit log)
+                                     │
+                                     ▼
+                          Gateway/BFF ◄──── Frontend (supervisor)
+                                     │
+                    supervisor: delete / regenerate (+ model choice)
+                                     │
+                    "regeneration-requested" event → Kafka (same consumers)
+```
+
+**Note on Summary/Evaluation depending on Transcript:** since both consume events but need transcript content, they either (a) also consume `call-transcript-generated` rather than `call-completed` directly, or (b) consume `call-completed` but poll/fetch the transcript file, retrying if not yet present. **Decision: (a)** — cleaner, avoids polling. Only Transcription Service consumes `call-completed` directly; Summary and Evaluation both consume `call-transcript-generated`.
+
+### 4.3 Kafka Topics (draft)
+
+| Topic | Producer | Consumers | Payload (key fields) |
+|---|---|---|---|
+| `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, mediaPath, templateId, timestamp |
+| `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, transcriptPath, version, modelUsed |
+| `call-summary-generated` | Summary Service | Metadata Consumer | callId, summaryPath, version, modelUsed |
+| `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, evaluationPath, version, modelUsed |
+| `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy |
+| `artifact-deleted` | Gateway/BFF | Metadata Consumer | callId, artifactType, version, deletedBy |
+
+*(Topic/payload names are a Day-1 draft — refine once TASKS.md implementation starts.)*
+
+### 4.4 Storage
+
+- **MongoDB** — call metadata, artifact catalog (current version + full version history pointers), audit log. Source of truth for *what exists and where*, not artifact *content*.
+- **Files (Blob or local filesystem, pluggable)** — media, and versioned JSON artifacts (`transcript_v1.json`, `transcript_v2.json`, ...), stored alongside the media. **Source of truth for content.**
+- **Versioning:** monotonically increasing per artifact type per call; never reused, even after delete. Delete = hard delete of the file + catalog entry (marked deleted in audit log, not silently removed from history).
+
+### 4.5 Model Registry
+
+A configuration (not a running service on Day 1) mapping a logical model name to: provider (OpenAI/Azure OpenAI/Anthropic/etc.), endpoint, credential env-var reference, request-shape adapter. Transcription/Summary/Evaluation services read this config to know how to call whichever provider the user selected at generation time.
+
+---
+
+## 5. Non-Functional Requirements / Constraints
+
+- Local-first (see §8) — must run entirely on one developer machine via Docker Compose for Kafka + MongoDB, with services run directly (IDE/CLI) during active development.
+- All artifacts and metadata are synthetic; no real customer or employer data at any point.
+- Services should be provider-agnostic and trigger-agnostic (auto vs. manual regeneration hit the same consumer logic).
+- Audit log is append-only.
+
+---
+
+## 6. Acceptance Criteria (Day 1)
+
+- [ ] Call Generator produces a synthetic call + dummy media file, writes media to local FS/Blob, publishes `call-completed`.
+- [ ] Transcription Service consumes `call-completed`, calls a real model provider (at least one, e.g. Azure AI Speech or an LLM-based mock transcription), writes `transcript_v1.json`, publishes `call-transcript-generated`.
+- [ ] Summary and Evaluation Services each consume `call-transcript-generated`, produce their own versioned JSON, publish their `*-generated` events.
+- [ ] Metadata Consumer writes catalog + audit entries to MongoDB for all of the above.
+- [ ] Frontend: hardcoded login, list of call records, detail view showing transcript/summary/evaluation (if present).
+- [ ] Frontend: supervisor can trigger delete and regenerate (with model selection) for any artifact; both flows work end-to-end and produce correct versioning + audit entries.
+- [ ] Gateway/BFF is the only service the frontend talks to.
+- [ ] Entire system runs locally via `docker-compose up` (Kafka + MongoDB containerized) + services run individually.
+
+---
+
+## 7. Future Increments (explicitly deferred)
+
+- **Real-time processing:** true streaming ASR + live keyword spotting / call tagging / in-call analytics. Deferred because there is currently no consumer that needs mid-call action — building streaming plumbing without a real use case isn't worth the complexity yet. Revisit once a live-analytics consumer is actually needed.
+- **OAuth** in place of hardcoded users.
+- **Containerize own services** (each gets a Dockerfile; full system runs via one `docker-compose up`) — natural next milestone after Day 1.
+- **Cloud deployment** (AKS) — after containerization; SMB-style alternate `ReportStore` backend proven by running in two environments.
+- **Kafka Streams state-store / Interactive Queries** for windowed aggregates (e.g. pass/fail rate over time) — plain consumers writing to Mongo are sufficient for Day 1; revisit if aggregate analytics become a real requirement.
+- **Model Registry as its own service** (currently just config).
+- Tie-in with the separate Prompt Evaluation Harness backlog item, for scoring the scoring itself.
+
+---
+
+## 8. Deployment Staging Plan
+
+1. **Now (local dev):** Kafka + MongoDB via Docker Compose; all Spring Boot services run via IDE/`mvn spring-boot:run`; Angular via `ng serve`. Node.js/npm is a **build-time toolchain only** for Angular — not a separate runtime service; no Node backend layer between Angular and the Gateway/BFF.
+2. **Next milestone:** Dockerfile per own service; single `docker-compose.yml` brings up the *entire* system (git-tag this milestone).
+3. **Future:** Move to AKS (Azure, consistent with existing Blob/AI Speech usage); compose → Kubernetes manifests or Helm chart.
+
+---
+
+## 9. Repository Layout (monorepo)
+
+```
+call-insights-pipeline/
+├── docs/
+│   ├── SPEC.md
+│   ├── TASKS.md
+│   └── README.md
+├── infra/
+│   └── docker-compose.yml        # Kafka, MongoDB (+ own services in milestone 2)
+├── frontend/                      # Angular + TypeScript
+├── gateway/                       # Spring Boot BFF
+├── call-generator/                # Spring Boot
+├── transcription-service/         # Spring Boot
+├── summary-service/                # Spring Boot
+├── evaluation-service/             # Spring Boot
+├── metadata-consumer/              # Spring Boot
+└── model-registry/                 # shared config module
+```
+
+Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning overhead for a single-developer project at this scale.
+
+---
+
+## 10. Open Items / To Refine During Implementation
+
+- Exact Kafka payload schemas (Avro/JSON Schema vs. plain JSON) — plain JSON recommended for Day 1 simplicity.
+- Exact model-registry config format (YAML vs. properties vs. DB-backed later).
+- Whether Gateway/BFF publishes regeneration/delete events directly to Kafka, or calls a small internal endpoint on each service that then publishes — recommend Gateway publishes directly, keeping services purely event-driven and symmetric between auto and manual triggers.
