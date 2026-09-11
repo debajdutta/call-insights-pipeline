@@ -100,7 +100,7 @@ Call Generator
 
 | Topic | Producer | Consumers | Payload (key fields) |
 |---|---|---|---|
-| `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, mediaPath, templateId, timestamp |
+| `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, agentId, mediaPath, templateId, timestamp |
 | `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, transcriptPath, version, modelUsed |
 | `call-summary-generated` | Summary Service | Metadata Consumer | callId, summaryPath, version, modelUsed |
 | `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, evaluationPath, version, modelUsed |
@@ -192,3 +192,18 @@ Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning over
 - Exact Kafka payload schemas (Avro/JSON Schema vs. plain JSON) — plain JSON recommended for Day 1 simplicity.
 - Exact model-registry config format (YAML vs. properties vs. DB-backed later).
 - Whether Gateway/BFF publishes regeneration/delete events directly to Kafka, or calls a small internal endpoint on each service that then publishes — recommend Gateway publishes directly, keeping services purely event-driven and symmetric between auto and manual triggers.
+
+### Resolved during implementation
+
+**Task 0 (infra):**
+- Kafka image: `apache/kafka:3.8.0` (official image, native KRaft support, no Confluent-specific env vars needed).
+- No auth on Kafka or MongoDB — local dev only, revisit if this ever runs anywhere shared.
+- kafka-ui on `localhost:8090`, mongo-express on `localhost:8091` (ports not specified in SPEC/TASKS; chosen during implementation).
+
+**Task 1 (Call Generator, FR1):**
+- `call-completed` payload now includes `agentId` in addition to the four fields originally drafted above — the Metadata Consumer (Task 5) will need it on the call record. The table above has been updated to reflect this.
+- `agentId`: fixed pool of 8 (`agent-001`..`agent-008`), configurable via `call-generator.agent-pool`.
+- `templateId`: fixed pool of 5 (`TEMPLATE_SALES_CALL`, `TEMPLATE_SUPPORT_CALL`, `TEMPLATE_ONBOARDING_CALL`, `TEMPLATE_COLLECTIONS_CALL`, `TEMPLATE_RETENTION_CALL`), configurable via `call-generator.template-pool`. **Evaluation Service (Task 4) should key its rule-based scoring off these IDs.**
+- `timestamp`: ISO-8601 string (`Instant.now().toString()`), not epoch millis/nanos — chosen for cross-service/human readability; Spring Kafka's default `JsonSerializer` does not auto-format `java.time.Instant` as ISO-8601, so the field is typed as `String` at the source rather than relying on serializer config.
+- Trigger mechanism: REST endpoint (`POST /api/calls/generate`) over `CommandLineRunner`, so generation can be triggered repeatedly against a running instance instead of only once at JVM startup.
+- Dummy media: 2-second silent WAV (8kHz, mono, 16-bit) via `javax.sound.sampled` — no external audio-codec dependency needed.
