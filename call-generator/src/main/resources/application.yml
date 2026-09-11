@@ -1,0 +1,43 @@
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: call-generator
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+call-generator:
+  media:
+    base-directory: ./media-store
+  topic:
+    call-completed: call-completed
+  agent-pool:
+    - agent-001
+    - agent-002
+    - agent-003
+    - agent-004
+    - agent-005
+    - agent-006
+    - agent-007
+    - agent-008
+  template-pool:
+    - TEMPLATE_SALES_CALL
+    - TEMPLATE_SUPPORT_CALL
+    - TEMPLATE_ONBOARDING_CALL
+    - TEMPLATE_COLLECTIONS_CALL
+    - TEMPLATE_RETENTION_CALL
