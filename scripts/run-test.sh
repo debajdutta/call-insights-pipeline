@@ -52,3 +52,15 @@ cat "$CALL_DIR/summary_v1.json" 2>/dev/null || echo "(not found yet)"
 echo
 echo "=== evaluation_v1.json ==="
 cat "$CALL_DIR/evaluation_v1.json" 2>/dev/null || echo "(not found yet)"
+
+echo
+echo "=== MongoDB catalog (catalog-service) ==="
+if command -v mongosh >/dev/null 2>&1; then
+  mongosh --quiet mongodb://localhost:27017/call-insights --eval "
+    print('-- calls --'); printjson(db.calls.findOne({_id: '$CALL_ID'}));
+    print('-- artifacts --'); db.artifacts.find({callId: '$CALL_ID'}).forEach(printjson);
+    print('-- audit_log --'); db.audit_log.find({callId: '$CALL_ID'}).forEach(printjson);
+  "
+else
+  echo "mongosh not found on PATH - skipping catalog check (see mongo-express at http://localhost:8091)"
+fi

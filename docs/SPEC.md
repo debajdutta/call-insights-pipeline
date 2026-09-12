@@ -28,7 +28,7 @@ Build a synthetic, event-driven agent-evaluation platform: when a call recording
 | FR1 | Synthetic call-record generator produces call metadata + dummy media, streamed to Blob/local filesystem, with a `call-completed` event published to Kafka |
 | FR2 | Transcription, Summary/Insights, and Evaluation services consume `call-completed` (or regeneration-request) events in parallel and each produce a versioned JSON artifact file, written next to the media |
 | FR3 | A Metadata Consumer writes/updates call + artifact catalog entries in MongoDB (source-of-truth for *location and version*, not content) |
-| FR4 | Frontend (Angular) supports hardcoded-user login, lists call records, and lets a supervisor view existing transcripts/summaries/evaluations |
+| FR4 | Frontend (Angular) supports DB-backed login (credentials in MongoDB, bcrypt-hashed; Gateway/BFF validates and issues a short-lived JWT), lists call records, and lets a supervisor view existing transcripts/summaries/evaluations |
 | FR5 | Supervisor can trigger generation/regeneration of any artifact, selecting a model provider from a model registry |
 | FR6 | Supervisor can delete an artifact (hard delete); regeneration without prior delete creates a new, incremented version |
 | FR7 | Every generate/delete/regenerate action is recorded in an audit log (who, what, when, which version, which model) |
@@ -37,7 +37,7 @@ Build a synthetic, event-driven agent-evaluation platform: when a call recording
 ## 3. Non-Goals (Day 1 / this phase)
 
 - No true real-time/streaming ASR or live keyword spotting, call tagging, or in-call analytics (explicitly deferred — see §7).
-- No OAuth/real identity provider (hardcoded users only; OAuth is a documented future increment).
+- No OAuth/real identity provider — login is app-managed (MongoDB-backed users, bcrypt + JWT), not a third-party IdP; OAuth/SSO is a documented future increment.
 - No MySQL (superseded by MongoDB for all structured metadata).
 - No Kubernetes/cloud deployment yet (local-first via Docker Compose; see §8).
 - No RAG/vector DB (separate backlog item, not part of this project).
@@ -51,8 +51,8 @@ Build a synthetic, event-driven agent-evaluation platform: when a call recording
 
 | Service | Responsibility |
 |---|---|
-| **Frontend** (Angular + TypeScript) | Login (hardcoded users), call-record list/detail, artifact viewing, generate/regenerate/delete actions, model-provider selection |
-| **Gateway / BFF** (Spring Boot) | Single entry point for frontend; routes to backend services; aggregates responses |
+| **Frontend** (Angular + TypeScript) | Login (DB-backed credentials via Gateway/BFF, JWT held client-side), call-record list/detail, artifact viewing, generate/regenerate/delete actions, model-provider selection |
+| **Gateway / BFF** (Spring Boot) | Single entry point for frontend; validates login credentials against MongoDB (bcrypt) and issues/validates JWTs; routes to backend services; aggregates responses |
 | **Call Generator** (Spring Boot) | Synthetic call + media generator; writes media to Blob/local FS; publishes `call-completed` |
 | **Transcription Service** (Spring Boot) | Consumes `call-completed`/regeneration events; calls selected model provider; writes versioned transcript JSON; publishes `call-transcript-generated` |
 | **Summary/Insights Service** (Spring Boot) | Same pattern, produces summary/insights JSON; depends on transcript existing |
@@ -136,7 +136,7 @@ A configuration (not a running service on Day 1) mapping a logical model name to
 - [ ] Transcription Service consumes `call-completed`, calls a real model provider (at least one, e.g. Azure AI Speech or an LLM-based mock transcription), writes `transcript_v1.json`, publishes `call-transcript-generated`.
 - [ ] Summary and Evaluation Services each consume `call-transcript-generated`, produce their own versioned JSON, publish their `*-generated` events.
 - [ ] Metadata Consumer writes catalog + audit entries to MongoDB for all of the above.
-- [ ] Frontend: hardcoded login, list of call records, detail view showing transcript/summary/evaluation (if present).
+- [ ] Frontend: DB-backed login (MongoDB users, bcrypt-hashed passwords, JWT issued by Gateway/BFF), list of call records, detail view showing transcript/summary/evaluation (if present).
 - [ ] Frontend: supervisor can trigger delete and regenerate (with model selection) for any artifact; both flows work end-to-end and produce correct versioning + audit entries.
 - [ ] Gateway/BFF is the only service the frontend talks to.
 - [ ] Entire system runs locally via `docker-compose up` (Kafka + MongoDB containerized) + services run individually.
@@ -146,7 +146,7 @@ A configuration (not a running service on Day 1) mapping a logical model name to
 ## 7. Future Increments (explicitly deferred)
 
 - **Real-time processing:** true streaming ASR + live keyword spotting / call tagging / in-call analytics. Deferred because there is currently no consumer that needs mid-call action — building streaming plumbing without a real use case isn't worth the complexity yet. Revisit once a live-analytics consumer is actually needed.
-- **OAuth** in place of hardcoded users.
+- **OAuth/SSO** in place of app-managed DB login.
 - **Containerize own services** (each gets a Dockerfile; full system runs via one `docker-compose up`) — natural next milestone after Day 1.
 - **Cloud deployment** (AKS) — after containerization; SMB-style alternate `ReportStore` backend proven by running in two environments.
 - **Kafka Streams state-store / Interactive Queries** for windowed aggregates (e.g. pass/fail rate over time) — plain consumers writing to Mongo are sufficient for Day 1; revisit if aggregate analytics become a real requirement.
@@ -208,3 +208,6 @@ Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning over
 - `timestamp`: ISO-8601 string (`Instant.now().toString()`), not epoch millis/nanos — chosen for cross-service/human readability; Spring Kafka's default `JsonSerializer` does not auto-format `java.time.Instant` as ISO-8601, so the field is typed as `String` at the source rather than relying on serializer config.
 - Trigger mechanism: REST endpoint (`POST /api/calls/generate`) over `CommandLineRunner`, so generation can be triggered repeatedly against a running instance instead of only once at JVM startup.
 - Dummy media: 2-second silent WAV (8kHz, mono, 16-bit) via `javax.sound.sampled` — no external audio-codec dependency needed.
+
+**Decided ahead of Task 5/6 (Metadata Consumer, Gateway/BFF):**
+- Login mechanism upgraded from hardcoded in-memory users (original FR4) to DB-backed: a `users` collection in MongoDB (username + bcrypt-hashed password), validated by the Gateway/BFF, which issues a short-lived JWT for the frontend to hold. Chosen to keep a minimal-but-real security practice in scope for this skill-building project, without taking on full OAuth/IdP integration (still deferred, see §7). Not yet implemented — Gateway/BFF and Frontend don't exist in the repo yet.
