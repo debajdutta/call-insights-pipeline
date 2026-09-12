@@ -1,5 +1,5 @@
 #!/bin/bash
-# Brings up Docker infra (if not already running) and (re)builds + (re)launches all 4
+# Brings up Docker infra (if not already running) and (re)builds + (re)launches all 5
 # backend services. Idempotent: stops any existing instance of each jar before starting fresh.
 # Run this from a shell where ANTHROPIC_API_KEY is already set (e.g. via ~/.zshrc) so
 # transcription-service and summary-service inherit it.
@@ -87,6 +87,7 @@ restart_service call-generator "$REPO_ROOT/call-generator"
 restart_service transcription-service "$REPO_ROOT/transcription-service"
 restart_service summary-service "$REPO_ROOT/summary-service"
 restart_service evaluation-service "$REPO_ROOT/evaluation-service"
+restart_service catalog-service "$REPO_ROOT/catalog-service"
 
 echo
 echo "=== Final status ==="

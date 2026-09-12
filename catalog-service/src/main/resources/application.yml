@@ -1,0 +1,32 @@
+server:
+  port: 8085
+
+logging:
+  file:
+    name: logs/catalog-service.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: catalog-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/call-insights
+  kafka:
+    bootstrap-servers: localhost:9092
+
+catalog-service:
+  topic:
+    call-completed: call-completed
+    call-transcript-generated: call-transcript-generated
+    call-summary-generated: call-summary-generated
+    call-evaluation-generated: call-evaluation-generated
+    artifact-deleted: artifact-deleted

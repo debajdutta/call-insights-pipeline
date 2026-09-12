@@ -89,5 +89,6 @@ Work through `TASKS.md` in order — each task maps to an FR ID in `SPEC.md`.
 - **Task 2 (Transcription Service)** — done, verified: consumes `call-completed`, calls Anthropic for a synthetic transcript (scenario-seeded per template for verifiable ground truth), writes `transcript_v1.json`, publishes `call-transcript-generated`.
 - **Task 3 (Summary/Insights Service)** — done, verified: consumes `call-transcript-generated`, calls Anthropic for a summary, writes `summary_v1.json`, publishes `call-summary-generated`.
 - **Task 4 (Evaluation Service)** — done, verified: consumes `call-transcript-generated`, rule-based keyword scoring (no LLM), writes `evaluation_v1.json`, publishes `call-evaluation-generated`.
-- Full pipeline (Tasks 1-4) verified end-to-end live via `scripts/run-test.sh` — real Kafka, real Anthropic calls, correct artifacts at every stage.
-- Tasks 5-8 (Metadata Consumer, Gateway/BFF, Frontend, full E2E) not yet started.
+- **Task 5 (Metadata Consumer, FR3)** — done, verified: renamed `catalog-service` during implementation (see SPEC.md). Consumes `call-completed`/`call-transcript-generated`/`call-summary-generated`/`call-evaluation-generated` (plus `artifact-deleted`, not yet published by anything), writes `calls`, `artifacts` (current version + version history), and `audit_log` collections to MongoDB. Confirmed directly in MongoDB, not just app logs.
+- Full pipeline (Tasks 1-5) verified end-to-end live via `scripts/run-test.sh` — real Kafka, real Anthropic calls, real MongoDB catalog writes, correct artifacts at every stage.
+- Tasks 6-8 (Gateway/BFF, Frontend, full E2E) not yet started. Login mechanism upgraded from hardcoded users to DB-backed (MongoDB + bcrypt + JWT) ahead of these — see SPEC.md §10.
