@@ -1,9 +1,9 @@
 server:
-  port: 8081
+  port: 8083
 
 logging:
   file:
-    name: logs/call-generator.log
+    name: logs/summary-service.log
 
 management:
   endpoints:
@@ -16,7 +16,7 @@ management:
 
 spring:
   application:
-    name: call-generator
+    name: summary-service
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -25,23 +25,12 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
-call-generator:
+summary-service:
   media:
     base-directory: ${user.home}/call-insights-pipeline/media-store
   topic:
-    call-completed: call-completed
-  agent-pool:
-    - agent-001
-    - agent-002
-    - agent-003
-    - agent-004
-    - agent-005
-    - agent-006
-    - agent-007
-    - agent-008
-  template-pool:
-    - TEMPLATE_SALES_CALL
-    - TEMPLATE_SUPPORT_CALL
-    - TEMPLATE_ONBOARDING_CALL
-    - TEMPLATE_COLLECTIONS_CALL
-    - TEMPLATE_RETENTION_CALL
+    call-transcript-generated: call-transcript-generated
+    artifact-regeneration-requested: artifact-regeneration-requested
+    call-summary-generated: call-summary-generated
+  model: claude-opus-5
+  max-tokens: 1024

@@ -1,0 +1,57 @@
+server:
+  port: 8082
+
+logging:
+  file:
+    name: logs/transcription-service.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: transcription-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+transcription-service:
+  media:
+    base-directory: ${user.home}/call-insights-pipeline/media-store
+  topic:
+    call-completed: call-completed
+    artifact-regeneration-requested: artifact-regeneration-requested
+    call-transcript-generated: call-transcript-generated
+  model: claude-opus-5
+  max-tokens: 2048
+  scenarios:
+    TEMPLATE_SALES_CALL: >
+      A customer calls in response to an ad for a premium software subscription. The agent
+      explains three key features, offers a 20%-off first-year discount, and the customer
+      agrees to sign up before the call ends.
+    TEMPLATE_SUPPORT_CALL: >
+      A customer calls because their internet service has been intermittently disconnecting
+      for two days. The agent apologizes, runs a remote diagnostic, identifies a faulty
+      modem, and schedules a technician visit for the next day.
+    TEMPLATE_ONBOARDING_CALL: >
+      A new customer who just signed up for the service calls to get set up. The agent
+      welcomes them, walks them through account setup and the first three steps of using
+      the product, and confirms they have no further questions before ending the call.
+    TEMPLATE_COLLECTIONS_CALL: >
+      A customer with a 60-day overdue balance is called by the agent. The agent explains
+      the outstanding amount, the customer says they're having financial difficulty, and
+      the agent offers a 3-month payment plan which the customer accepts.
+    TEMPLATE_RETENTION_CALL: >
+      A customer calls to cancel their subscription. The agent asks why, listens to the
+      customer's complaint about price, and offers a loyalty discount plus a free add-on
+      for 6 months, which convinces the customer to stay.
