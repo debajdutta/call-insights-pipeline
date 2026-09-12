@@ -1,0 +1,36 @@
+server:
+  port: 8083
+
+logging:
+  file:
+    name: logs/summary-service.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: summary-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+summary-service:
+  media:
+    base-directory: ${user.home}/call-insights-pipeline/media-store
+  topic:
+    call-transcript-generated: call-transcript-generated
+    artifact-regeneration-requested: artifact-regeneration-requested
+    call-summary-generated: call-summary-generated
+  model: claude-opus-5
+  max-tokens: 1024

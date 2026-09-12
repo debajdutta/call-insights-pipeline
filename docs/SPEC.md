@@ -101,7 +101,7 @@ Call Generator
 | Topic | Producer | Consumers | Payload (key fields) |
 |---|---|---|---|
 | `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, agentId, mediaPath, templateId, timestamp |
-| `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, transcriptPath, version, modelUsed |
+| `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, agentId, templateId, transcriptPath, version, modelUsed |
 | `call-summary-generated` | Summary Service | Metadata Consumer | callId, summaryPath, version, modelUsed |
 | `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, evaluationPath, version, modelUsed |
 | `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy |
@@ -152,6 +152,7 @@ A configuration (not a running service on Day 1) mapping a logical model name to
 - **Kafka Streams state-store / Interactive Queries** for windowed aggregates (e.g. pass/fail rate over time) — plain consumers writing to Mongo are sufficient for Day 1; revisit if aggregate analytics become a real requirement.
 - **Model Registry as its own service** (currently just config).
 - Tie-in with the separate Prompt Evaluation Harness backlog item, for scoring the scoring itself.
+- **Real ASR via a self-hosted Whisper model, paired with a voice-recorder-as-call-generator** (real mic input instead of synthetic metadata) — gives genuine ground-truth transcription testing instead of LLM-mock transcripts. Deliberately deferred until after the synthetic pipeline is proven end-to-end through the frontend, since it's a materially larger, separate piece of work (new native/Python dependency for Whisper, no ffmpeg on this dev machine so `faster-whisper` over the original `whisper` package, plus a voice-recorder component not yet described anywhere in this SPEC). **Revisit once Tasks 5-8 (Metadata Consumer, Gateway, Frontend) are built and tested — flag this back to the user at that point.**
 
 ---
 

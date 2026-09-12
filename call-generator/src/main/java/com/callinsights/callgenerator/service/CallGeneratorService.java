@@ -2,6 +2,8 @@ package com.callinsights.callgenerator.service;
 
 import com.callinsights.callgenerator.config.CallGeneratorProperties;
 import com.callinsights.callgenerator.model.CallCompletedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class CallGeneratorService {
+
+    private static final Logger log = LoggerFactory.getLogger(CallGeneratorService.class);
 
     private final MediaFileGenerator mediaFileGenerator;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -46,6 +50,9 @@ public class CallGeneratorService {
                 callId, agentId, templateId, mediaFile.toString(), timestamp);
 
         kafkaTemplate.send(properties.getTopic().getCallCompleted(), callId, event);
+
+        log.info("Generated call callId={} agentId={} templateId={} mediaPath={}",
+                callId, agentId, templateId, mediaFile);
 
         return event;
     }

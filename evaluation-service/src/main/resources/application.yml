@@ -1,0 +1,60 @@
+server:
+  port: 8084
+
+logging:
+  file:
+    name: logs/evaluation-service.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: evaluation-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+evaluation-service:
+  media:
+    base-directory: ${user.home}/call-insights-pipeline/media-store
+  topic:
+    call-transcript-generated: call-transcript-generated
+    artifact-regeneration-requested: artifact-regeneration-requested
+    call-evaluation-generated: call-evaluation-generated
+  scoring:
+    ruleset-version: keyword-rules-v1
+    pass-threshold: 0.5
+    rules:
+      TEMPLATE_SALES_CALL:
+        - thank
+        - offer
+        - discount
+        - proceed
+      TEMPLATE_SUPPORT_CALL:
+        - understand
+        - sorry
+        - help
+        - resolve
+      TEMPLATE_ONBOARDING_CALL:
+        - welcome
+        - walk you through
+        - questions
+      TEMPLATE_COLLECTIONS_CALL:
+        - balance
+        - payment
+        - due
+      TEMPLATE_RETENTION_CALL:
+        - value
+        - discount
+        - stay

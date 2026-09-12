@@ -1,6 +1,10 @@
 server:
   port: 8081
 
+logging:
+  file:
+    name: logs/call-generator.log
+
 management:
   endpoints:
     web:
@@ -23,7 +27,7 @@ spring:
 
 call-generator:
   media:
-    base-directory: ./media-store
+    base-directory: ${user.home}/call-insights-pipeline/media-store
   topic:
     call-completed: call-completed
   agent-pool:
