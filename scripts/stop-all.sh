@@ -12,25 +12,11 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 echo "=== Backend services ==="
-for name in call-generator transcription-service summary-service evaluation-service catalog-service gateway-service; do
-  pid=$(pgrep -f "${name}-0.1.0-SNAPSHOT.jar" || true)
-  if [ -n "$pid" ]; then
-    echo "[$name] stopping (pid $pid)..."
-    kill $pid
-  else
-    echo "[$name] not running."
-  fi
-done
+"$REPO_ROOT/scripts/services.sh" stop
 
 echo
 echo "=== Frontend dev server ==="
-pid=$(pgrep -f "ng serve" || true)
-if [ -n "$pid" ]; then
-  echo "[frontend] stopping (pid $pid)..."
-  kill $pid
-else
-  echo "[frontend] not running."
-fi
+"$REPO_ROOT/scripts/frontend.sh" stop
 
 sleep 2
 echo

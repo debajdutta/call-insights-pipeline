@@ -1,5 +1,6 @@
 #!/bin/bash
-# Readiness check: Docker infra, all 6 service actuator endpoints, ANTHROPIC_API_KEY presence.
+# Readiness check: Docker infra, all 6 service actuator endpoints, the frontend dev server,
+# and ANTHROPIC_API_KEY presence.
 # Read-only - makes no changes.
 set -uo pipefail
 
@@ -35,6 +36,15 @@ check_health summary-service 8083
 check_health evaluation-service 8084
 check_health catalog-service 8085
 check_health gateway-service 8086
+
+echo
+echo "=== Frontend ==="
+frontend_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:4200" 2>/dev/null)
+if [ "$frontend_code" = "200" ]; then
+  echo "  frontend (:4200): UP"
+else
+  echo "  frontend (:4200): NOT REACHABLE (http ${frontend_code:-000})"
+fi
 
 check_key() {
   local name="$1"
