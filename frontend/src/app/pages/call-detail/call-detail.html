@@ -1,0 +1,87 @@
+<div class="page">
+  <a routerLink="/calls" class="back-link">&larr; Back to calls</a>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (call(); as c) {
+    <header>
+      <h1>Call {{ c.callId }}</h1>
+      <p class="meta">{{ c.agentId }} &middot; {{ c.templateId }} &middot; {{ c.timestamp }}</p>
+    </header>
+
+    @for (artifact of c.artifacts; track artifact.artifactType) {
+      <section class="artifact-card">
+        <div class="artifact-header">
+          <h2>{{ artifact.artifactType }}</h2>
+          @if (artifact.deleted) {
+            <span class="status deleted">deleted (last v{{ artifact.currentVersion }})</span>
+          } @else if (artifact.currentVersion) {
+            <span class="status">current v{{ artifact.currentVersion }}</span>
+          } @else {
+            <span class="status">not generated yet</span>
+          }
+        </div>
+
+        @if (!artifact.deleted && artifact.currentContent) {
+          <pre class="content">{{ artifact.currentContent | json }}</pre>
+        }
+
+        @if (actionTimedOut() === artifact.artifactType) {
+          <p class="timeout-notice">
+            Still not done after 60s — it may still complete in the background. Reload the page in a bit to check.
+          </p>
+        }
+
+        <div class="actions">
+          @if (modelByArtifactType[artifact.artifactType] !== undefined) {
+            <input
+              type="text"
+              [(ngModel)]="modelByArtifactType[artifact.artifactType]"
+              placeholder="model"
+              class="model-input"
+            />
+          }
+          <button (click)="regenerate(artifact.artifactType)" [disabled]="actionInFlight() === artifact.artifactType">
+            {{ actionInFlight() === artifact.artifactType ? 'Working...' : 'Regenerate' }}
+          </button>
+          @if (!artifact.deleted && artifact.currentVersion) {
+            <button
+              class="danger"
+              (click)="delete(artifact.artifactType)"
+              [disabled]="actionInFlight() === artifact.artifactType"
+            >
+              Delete
+            </button>
+          }
+        </div>
+
+        <details>
+          <summary>Version history ({{ artifact.versions.length }})</summary>
+          <ul>
+            @for (v of artifact.versions; track v.version) {
+              <li>v{{ v.version }} &mdash; {{ v.modelUsed }} &mdash; {{ v.generatedAt }}</li>
+            }
+          </ul>
+        </details>
+      </section>
+    }
+
+    <section class="audit-card">
+      <h2>Audit log</h2>
+      <ul class="audit-list">
+        @for (entry of auditLog(); track entry.timestamp) {
+          <li>
+            <span class="mono">{{ entry.timestamp }}</span>
+            &mdash; {{ entry.action }}
+            @if (entry.artifactType) {
+              ({{ entry.artifactType }}@if (entry.version) { v{{ entry.version }} })
+            }
+            by {{ entry.actor }}
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

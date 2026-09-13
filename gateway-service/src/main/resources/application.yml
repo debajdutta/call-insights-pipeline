@@ -29,6 +29,10 @@ spring:
         spring.json.add.type.headers: false
 
 gateway-service:
+  cors:
+    # The Angular dev server's origin. Override via GATEWAY_CORS_ALLOWED_ORIGIN once the
+    # frontend is served from somewhere other than `ng serve` on its default port.
+    allowed-origin: ${GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:4200}
   topic:
     artifact-regeneration-requested: artifact-regeneration-requested
     artifact-deleted: artifact-deleted
