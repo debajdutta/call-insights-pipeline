@@ -1,8 +1,9 @@
 #!/bin/bash
 # Brings up Docker infra (if not already running) and (re)builds + (re)launches all 6
-# backend services. Idempotent: stops any existing instance of each jar before starting fresh.
-# Run this from a shell where ANTHROPIC_API_KEY is already set (e.g. via ~/.zshrc) so
-# transcription-service and summary-service inherit it.
+# backend services plus the frontend dev server. Idempotent: stops any existing instance
+# of each jar (and any running `ng serve`) before starting fresh.
+# Run this from a shell where ANTHROPIC_API_KEY is already exported (session-scoped, not a
+# shell profile) so transcription-service and summary-service inherit it.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -23,7 +24,7 @@ fi
 if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   echo "WARNING: ANTHROPIC_API_KEY is not set in this shell."
   echo "         transcription-service and summary-service will still start, but any"
-  echo "         real generation will fail until the key is set (e.g. in ~/.zshrc)."
+  echo "         real generation will fail until the key is set (session-scoped export)."
   echo
 fi
 
@@ -89,6 +90,10 @@ restart_service summary-service "$REPO_ROOT/summary-service"
 restart_service evaluation-service "$REPO_ROOT/evaluation-service"
 restart_service catalog-service "$REPO_ROOT/catalog-service"
 restart_service gateway-service "$REPO_ROOT/gateway-service"
+
+echo
+echo "=== Frontend ==="
+"$REPO_ROOT/scripts/frontend.sh" restart
 
 echo
 echo "=== Final status ==="
