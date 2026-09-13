@@ -46,7 +46,27 @@ ng serve
 
 **On `ANTHROPIC_API_KEY`:** export it fresh in your terminal each session (`export ANTHROPIC_API_KEY="..."`) rather than adding it to `~/.zshrc` or another shell profile — a persistent key in a shell profile can get picked up by unrelated tools/logins unexpectedly.
 
-## Monitoring
+## Monitoring & debugging
+
+**Important URLs:**
+
+| URL | What it's for |
+|---|---|
+| http://localhost:4200 | Frontend (Angular) — the actual supervisor UI |
+| http://localhost:8090 | Kafka UI — browse topics, inspect individual messages, check consumer group lag |
+| http://localhost:8091 | Mongo Express — browse the `call-insights` database's collections |
+| http://localhost:8081-8086/actuator/health | Per-service health (see port table below) |
+
+**Kafka UI** (http://localhost:8090): topics to look at when debugging the pipeline —
+`call-completed`, `call-transcript-generated`, `call-summary-generated`,
+`call-evaluation-generated`, `artifact-regeneration-requested`, `artifact-deleted`. Click a
+topic → Messages to see the actual JSON payloads and which consumer groups have read them.
+
+**Mongo Express** (http://localhost:8091): open the `call-insights` database. Collections:
+`calls` (one per call), `artifacts` (one per call+artifactType, current version + full version
+history), `audit_log` (append-only, every generate/delete action), `users` (login credentials,
+bcrypt-hashed). Written by `catalog-service` (all except `users`) and `gateway-service`
+(`users`, via the startup seeder).
 
 **Infra (Docker containers):**
 
@@ -55,9 +75,6 @@ cd infra
 docker compose ps                    # status of Kafka, MongoDB, kafka-ui, mongo-express
 docker compose logs -f <service>     # e.g. kafka, mongo
 ```
-
-- Kafka UI: http://localhost:8090
-- Mongo Express: http://localhost:8091
 
 **Spring Boot services** — each writes its own log via Spring Boot's native file logging (`logging.file.name` in `application.yml`, includes automatic rotation), to a dedicated path inside the repo:
 
