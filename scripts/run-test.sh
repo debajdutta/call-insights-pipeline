@@ -1,7 +1,7 @@
 #!/bin/bash
 # Triggers one call generation, waits for the pipeline to finish, then prints the full
 # log trace (filtered by callId) and the contents of all three generated artifacts.
-# Assumes all 4 services are already running (see start-all.sh / status.sh).
+# Assumes all 6 backend services are already running (see start-all.sh / status.sh).
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

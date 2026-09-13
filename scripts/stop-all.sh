@@ -1,10 +1,17 @@
 #!/bin/bash
-# Stops all 6 backend service processes. Leaves Docker infra (Kafka/Mongo/UIs) running,
-# since that's meant to stay up long-term - re-run infra/docker-compose.yml yourself if
-# you also want that down.
+# Full teardown: stops all 6 backend services, the frontend dev server (if running via
+# `ng serve`), and brings down Docker infra (Kafka/Mongo/UIs) via `docker compose down`.
+# Use this when you're done for the day. For a fast restart loop that leaves infra (and
+# its data) alone, use scripts/services.sh instead.
 set -uo pipefail
 
-echo "Stopping backend services (Docker infra left running)..."
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if ! command -v docker >/dev/null 2>&1; then
+  export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+fi
+
+echo "=== Backend services ==="
 for name in call-generator transcription-service summary-service evaluation-service catalog-service gateway-service; do
   pid=$(pgrep -f "${name}-0.1.0-SNAPSHOT.jar" || true)
   if [ -n "$pid" ]; then
@@ -15,7 +22,21 @@ for name in call-generator transcription-service summary-service evaluation-serv
   fi
 done
 
+echo
+echo "=== Frontend dev server ==="
+pid=$(pgrep -f "ng serve" || true)
+if [ -n "$pid" ]; then
+  echo "[frontend] stopping (pid $pid)..."
+  kill $pid
+else
+  echo "[frontend] not running."
+fi
+
 sleep 2
 echo
 echo "Remaining matching processes (should be none):"
-pgrep -fl "call-generator-0.1.0-SNAPSHOT.jar|transcription-service-0.1.0-SNAPSHOT.jar|summary-service-0.1.0-SNAPSHOT.jar|evaluation-service-0.1.0-SNAPSHOT.jar|catalog-service-0.1.0-SNAPSHOT.jar|gateway-service-0.1.0-SNAPSHOT.jar" || echo "  (none)"
+pgrep -fl "call-generator-0.1.0-SNAPSHOT.jar|transcription-service-0.1.0-SNAPSHOT.jar|summary-service-0.1.0-SNAPSHOT.jar|evaluation-service-0.1.0-SNAPSHOT.jar|catalog-service-0.1.0-SNAPSHOT.jar|gateway-service-0.1.0-SNAPSHOT.jar|ng serve" || echo "  (none)"
+
+echo
+echo "=== Docker infra ==="
+(cd "$REPO_ROOT/infra" && docker compose down)
