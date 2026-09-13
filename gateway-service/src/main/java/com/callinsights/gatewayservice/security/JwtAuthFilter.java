@@ -31,6 +31,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // CORS preflight requests carry no Authorization header by design - let them through so
+        // Spring's CORS handling (registered in WebConfig) can answer them.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
         String path = request.getRequestURI();
         return PUBLIC_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }

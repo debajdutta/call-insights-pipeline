@@ -1,0 +1,43 @@
+<div class="page">
+  <header>
+    <h1>Call Insights</h1>
+    <span class="user">{{ authService.username() }}</span>
+  </header>
+
+  @if (loading()) {
+    <p>Loading calls...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (calls().length === 0) {
+    <p>No calls yet.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Call ID</th>
+          <th>Agent</th>
+          <th>Template</th>
+          <th>Timestamp</th>
+          <th>Artifacts</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (call of calls(); track call.callId) {
+          <tr [routerLink]="['/calls', call.callId]" class="row-link">
+            <td class="mono">{{ call.callId }}</td>
+            <td>{{ call.agentId }}</td>
+            <td>{{ call.templateId }}</td>
+            <td>{{ call.timestamp }}</td>
+            <td>
+              @for (artifact of call.artifacts; track artifact.artifactType) {
+                <span class="badge" [class.deleted]="artifact.deleted">
+                  {{ artifact.artifactType }}@if (artifact.currentVersion) { v{{ artifact.currentVersion }} }
+                </span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
