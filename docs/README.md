@@ -38,10 +38,13 @@ ng serve
 
 | Script | Does |
 |---|---|
-| `scripts/start-all.sh` | Brings up Docker infra if needed, rebuilds and (re)launches all 4 backend services. Idempotent. Requires `ANTHROPIC_API_KEY` set in the shell (e.g. via `~/.zshrc`) for transcription-service/summary-service to do real work. |
-| `scripts/stop-all.sh` | Stops the 4 backend services; leaves Docker infra running. |
-| `scripts/status.sh` | Read-only readiness check: infra container health, all 4 actuator endpoints, API key presence (name only, never the value). |
-| `scripts/run-test.sh` | Triggers one call generation, waits for the full pipeline to complete, prints the log trace and all three generated artifacts. |
+| `scripts/start-all.sh` | Brings up Docker infra if needed, rebuilds and (re)launches all 6 backend services. Idempotent. Requires `ANTHROPIC_API_KEY` set in the current shell (session-scoped `export`, not a shell profile — see below) for transcription-service/summary-service to do real work. |
+| `scripts/stop-all.sh` | Full teardown: stops the 6 backend services, the frontend dev server (if running via `ng serve`), and Docker infra. Use this when you're done for the day. |
+| `scripts/services.sh` | `start\|stop\|restart` for the backend services only — does **not** touch Docker infra or the frontend, so Kafka/Mongo state is preserved. Optionally scoped to specific services, e.g. `scripts/services.sh restart gateway-service`. Use this for a fast edit-rebuild-relaunch loop. |
+| `scripts/status.sh` | Read-only readiness check: infra container health, all 6 actuator endpoints, API key presence (name only, never the value). |
+| `scripts/run-test.sh` | Triggers one call generation, waits for the full pipeline to complete, prints the log trace, all three generated artifacts, and the MongoDB catalog entries. |
+
+**On `ANTHROPIC_API_KEY`:** export it fresh in your terminal each session (`export ANTHROPIC_API_KEY="..."`) rather than adding it to `~/.zshrc` or another shell profile — a persistent key in a shell profile can get picked up by unrelated tools/logins unexpectedly.
 
 ## Monitoring
 
