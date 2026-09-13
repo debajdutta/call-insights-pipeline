@@ -1,0 +1,44 @@
+server:
+  port: 8086
+
+logging:
+  file:
+    name: logs/gateway-service.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: gateway-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/call-insights
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+gateway-service:
+  topic:
+    artifact-regeneration-requested: artifact-regeneration-requested
+    artifact-deleted: artifact-deleted
+  jwt:
+    # Local dev only - override via JWT_SECRET env var for anything beyond one developer's machine.
+    # Must be at least 32 bytes for HS256; the fallback below is a placeholder, not a real secret.
+    secret: ${JWT_SECRET:dev-only-placeholder-secret-please-override-32bytes}
+    expiration-ms: 28800000 # 8 hours
+  seed-user:
+    # First supervisor account, created on startup if the users collection is empty.
+    # Override both via env vars for anything beyond one developer's machine.
+    username: ${SEED_USER_USERNAME:supervisor}
+    password: ${SEED_USER_PASSWORD:ChangeMe123!}

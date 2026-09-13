@@ -192,7 +192,6 @@ Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning over
 
 - Exact Kafka payload schemas (Avro/JSON Schema vs. plain JSON) — plain JSON recommended for Day 1 simplicity.
 - Exact model-registry config format (YAML vs. properties vs. DB-backed later).
-- Whether Gateway/BFF publishes regeneration/delete events directly to Kafka, or calls a small internal endpoint on each service that then publishes — recommend Gateway publishes directly, keeping services purely event-driven and symmetric between auto and manual triggers.
 
 ### Resolved during implementation
 
@@ -210,4 +209,14 @@ Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning over
 - Dummy media: 2-second silent WAV (8kHz, mono, 16-bit) via `javax.sound.sampled` — no external audio-codec dependency needed.
 
 **Decided ahead of Task 5/6 (Metadata Consumer, Gateway/BFF):**
-- Login mechanism upgraded from hardcoded in-memory users (original FR4) to DB-backed: a `users` collection in MongoDB (username + bcrypt-hashed password), validated by the Gateway/BFF, which issues a short-lived JWT for the frontend to hold. Chosen to keep a minimal-but-real security practice in scope for this skill-building project, without taking on full OAuth/IdP integration (still deferred, see §7). Not yet implemented — Gateway/BFF and Frontend don't exist in the repo yet.
+- Login mechanism upgraded from hardcoded in-memory users (original FR4) to DB-backed: a `users` collection in MongoDB (username + bcrypt-hashed password), validated by the Gateway/BFF, which issues a short-lived JWT for the frontend to hold. Chosen to keep a minimal-but-real security practice in scope for this skill-building project, without taking on full OAuth/IdP integration (still deferred, see §7).
+
+**Task 6 (Gateway/BFF, FR4/FR5/FR6/FR7/FR8):**
+- Gateway/BFF publishes regeneration/delete events directly to Kafka (resolves the open item above) — keeps Transcription/Summary/Evaluation Services purely event-driven and symmetric between auto and manual triggers; Gateway needs no synchronous endpoint on any of them.
+- Gateway reads MongoDB directly for catalog data (`calls`, `artifacts`, `audit_log` collections) rather than calling a read API on the Metadata Consumer (`catalog-service`) — both are just Spring Data Mongo repositories against the same database, simplest option for Day 1.
+- JWT: `io.jsonwebtoken:jjwt` (0.12.x), HS256, secret via `JWT_SECRET` env var (local-dev fallback in `application.yml`, must be ≥32 bytes), 8-hour expiration. Hand-rolled `OncePerRequestFilter` bearer-token check rather than full Spring Security — only two auth states exist (anonymous on `/api/auth/login` + `/actuator/**`, authenticated everywhere else), so a filter framework added configuration surface without buying anything.
+- Password hashing: `spring-security-crypto`'s `BCryptPasswordEncoder` only (not the full `spring-boot-starter-security` — avoids its auto-configured filter chain/default login page, which nothing here needs).
+- First supervisor user seeded via a `CommandLineRunner` (`UserSeeder`) on startup if the `users` collection is empty, using `SEED_USER_USERNAME`/`SEED_USER_PASSWORD` env vars (dev fallback: `supervisor`/`ChangeMe123!`). No user-management UI/API yet — additional users are inserted into MongoDB directly.
+- Delete semantics (FR6): Gateway looks up the artifact's current version+path from the catalog, deletes the file from local FS itself, then publishes `artifact-deleted` — `catalog-service` (Task 5) marks the catalog entry `deleted: true` and appends the audit log entry. Version history is preserved in the catalog doc even after delete, matching §4.4's "hard delete of file + catalog entry, not silently removed from history."
+- Regenerate (FR5) is fire-and-forget from the Gateway's perspective: it validates the call/artifact type exist, then publishes `artifact-regeneration-requested`; the version bump itself already happens inside Transcription/Summary/Evaluation Service (built in Tasks 2-4), so Gateway does no version bookkeeping of its own.
+- Gateway/BFF port: `8086` (next after `catalog-service`'s `8085`).

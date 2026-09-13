@@ -1,5 +1,5 @@
 #!/bin/bash
-# Readiness check: Docker infra, all 5 service actuator endpoints, ANTHROPIC_API_KEY presence.
+# Readiness check: Docker infra, all 6 service actuator endpoints, ANTHROPIC_API_KEY presence.
 # Read-only - makes no changes.
 set -uo pipefail
 
@@ -34,6 +34,7 @@ check_health transcription-service 8082
 check_health summary-service 8083
 check_health evaluation-service 8084
 check_health catalog-service 8085
+check_health gateway-service 8086
 
 check_key() {
   local name="$1"

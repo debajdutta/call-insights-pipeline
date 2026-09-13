@@ -4,7 +4,7 @@ A skill-building microservices project: an event-driven call-transcription/summa
 
 **This is an entirely synthetic rebuild** — own fake call generator, dummy media, own scoring rules. No real AudioCodes/SmartTAP code, data, or proprietary logic is used anywhere in this project.
 
-See [`docs/SPEC.md`](./SPEC.md) for the full spec (problem statement, service boundaries, event contracts, data model, acceptance criteria) and [`docs/TASKS.md`](./TASKS.md) for the Day-1 implementation checklist.
+See [`docs/SPEC.md`](./SPEC.md) for the full spec (problem statement, service boundaries, event contracts, data model, acceptance criteria), [`docs/TASKS.md`](./TASKS.md) for the Day-1 implementation checklist, and [`docs/API_TESTING.md`](./API_TESTING.md) for curl examples against the Gateway/BFF API.
 
 ## Stack
 
@@ -73,6 +73,8 @@ Each service also exposes Spring Boot Actuator for health/metrics without needin
 | transcription-service | 8082 | `GET /actuator/health` | (event-driven; consumes `call-completed`) |
 | summary-service | 8083 | `GET /actuator/health` | (event-driven; consumes `call-transcript-generated`) |
 | evaluation-service | 8084 | `GET /actuator/health` | (event-driven; consumes `call-transcript-generated`) |
+| catalog-service | 8085 | `GET /actuator/health` | (event-driven; consumes `call-completed`/`*-generated`/`artifact-deleted`) |
+| gateway-service | 8086 | `GET /actuator/health` | `POST /api/auth/login`, `GET /api/calls[/{callId}]`, `POST .../regenerate`, `DELETE .../artifacts/{type}` |
 
 ## How to use this with Claude Code
 
@@ -91,4 +93,5 @@ Work through `TASKS.md` in order — each task maps to an FR ID in `SPEC.md`.
 - **Task 4 (Evaluation Service)** — done, verified: consumes `call-transcript-generated`, rule-based keyword scoring (no LLM), writes `evaluation_v1.json`, publishes `call-evaluation-generated`.
 - **Task 5 (Metadata Consumer, FR3)** — done, verified: renamed `catalog-service` during implementation (see SPEC.md). Consumes `call-completed`/`call-transcript-generated`/`call-summary-generated`/`call-evaluation-generated` (plus `artifact-deleted`, not yet published by anything), writes `calls`, `artifacts` (current version + version history), and `audit_log` collections to MongoDB. Confirmed directly in MongoDB, not just app logs.
 - Full pipeline (Tasks 1-5) verified end-to-end live via `scripts/run-test.sh` — real Kafka, real Anthropic calls, real MongoDB catalog writes, correct artifacts at every stage.
-- Tasks 6-8 (Gateway/BFF, Frontend, full E2E) not yet started. Login mechanism upgraded from hardcoded users to DB-backed (MongoDB + bcrypt + JWT) ahead of these — see SPEC.md §10.
+- **Task 6 (Gateway/BFF, FR4/FR5/FR6/FR7/FR8)** — done, verified: DB-backed login (MongoDB `users` collection, bcrypt, JWT via `POST /api/auth/login`), `GET /api/calls` and `GET /api/calls/{callId}` (catalog + artifact content read from MongoDB + local FS), `GET /api/calls/{callId}/audit`, `POST /api/calls/{callId}/artifacts/{artifactType}/regenerate` and `DELETE /api/calls/{callId}/artifacts/{artifactType}` (both publish Kafka events consumed by `catalog-service`). Verified live: login success/failure, unauthenticated 401, regenerate correctly bumped a version (1→2), delete removed the file from disk and marked the catalog entry `deleted: true` while preserving version history.
+- Tasks 7-8 (Frontend, full E2E) not yet started.
