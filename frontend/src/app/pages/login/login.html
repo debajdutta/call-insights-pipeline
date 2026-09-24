@@ -3,6 +3,10 @@
     <h1>Call Insights</h1>
     <p class="subtitle">Supervisor Login</p>
 
+    @if (sessionExpired()) {
+      <p class="notice">Your session expired. Please log in again.</p>
+    }
+
     <label for="username">Username</label>
     <input id="username" name="username" type="text" [(ngModel)]="username" required autocomplete="username" />
 
