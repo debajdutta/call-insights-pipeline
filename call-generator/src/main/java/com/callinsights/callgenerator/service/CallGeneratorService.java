@@ -1,7 +1,7 @@
 package com.callinsights.callgenerator.service;
 
 import com.callinsights.callgenerator.config.CallGeneratorProperties;
-import com.callinsights.callgenerator.model.CallCompletedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;

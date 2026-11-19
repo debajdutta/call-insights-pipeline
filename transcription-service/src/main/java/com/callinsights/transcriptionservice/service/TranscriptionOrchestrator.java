@@ -1,9 +1,9 @@
 package com.callinsights.transcriptionservice.service;
 
 import com.callinsights.transcriptionservice.config.TranscriptionServiceProperties;
-import com.callinsights.transcriptionservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.transcriptionservice.model.CallCompletedEvent;
-import com.callinsights.transcriptionservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.transcriptionservice.model.TranscriptArtifact;
 import com.callinsights.transcriptionservice.service.provider.TranscriptionProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,7 +1,7 @@
 package com.callinsights.transcriptionservice.kafka;
 
-import com.callinsights.transcriptionservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.transcriptionservice.model.CallCompletedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
 import com.callinsights.transcriptionservice.service.TranscriptionOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,7 +1,7 @@
 package com.callinsights.summaryservice.config;
 
-import com.callinsights.summaryservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.summaryservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;

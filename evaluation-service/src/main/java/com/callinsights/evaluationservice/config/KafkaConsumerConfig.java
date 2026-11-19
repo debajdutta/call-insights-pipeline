@@ -1,7 +1,7 @@
 package com.callinsights.evaluationservice.config;
 
-import com.callinsights.evaluationservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.evaluationservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;

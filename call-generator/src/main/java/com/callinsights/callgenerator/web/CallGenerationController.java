@@ -1,6 +1,6 @@
 package com.callinsights.callgenerator.web;
 
-import com.callinsights.callgenerator.model.CallCompletedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
 import com.callinsights.callgenerator.service.CallGeneratorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

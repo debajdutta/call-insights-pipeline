@@ -102,12 +102,12 @@ Call Generator
 |---|---|---|---|
 | `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, agentId, mediaPath, templateId, timestamp |
 | `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, agentId, templateId, transcriptPath, version, modelUsed |
-| `call-summary-generated` | Summary Service | Metadata Consumer | callId, summaryPath, version, modelUsed |
-| `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, evaluationPath, version, modelUsed |
-| `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy |
+| `call-summary-generated` | Summary Service | Metadata Consumer | callId, agentId, templateId, summaryPath, version, modelUsed |
+| `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, agentId, templateId, evaluationPath, version, modelUsed |
+| `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy, agentId, templateId |
 | `artifact-deleted` | Gateway/BFF | Metadata Consumer | callId, artifactType, version, deletedBy |
 
-*(Topic/payload names are a Day-1 draft — refine once TASKS.md implementation starts.)*
+*(Topic/payload names started as a Day-1 draft. The payload column lists every field the code sends: `agentId`/`templateId` on the summary, evaluation and regeneration events were added during implementation and may be null on regeneration. The event records are shared by all services from `callinsights-common` (package `com.callinsights.common.event`); topic names are configured in each service's `application.yml`.)*
 
 ### 4.4 Storage
 

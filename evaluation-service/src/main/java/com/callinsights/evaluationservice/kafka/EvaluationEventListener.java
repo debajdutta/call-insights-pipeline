@@ -1,7 +1,7 @@
 package com.callinsights.evaluationservice.kafka;
 
-import com.callinsights.evaluationservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.evaluationservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.evaluationservice.service.EvaluationOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

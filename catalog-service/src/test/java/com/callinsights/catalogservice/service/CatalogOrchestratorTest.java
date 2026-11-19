@@ -2,8 +2,8 @@ package com.callinsights.catalogservice.service;
 
 import com.callinsights.catalogservice.document.ArtifactCatalogDocument;
 import com.callinsights.catalogservice.document.CallDocument;
-import com.callinsights.catalogservice.model.CallCompletedEvent;
-import com.callinsights.catalogservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.catalogservice.repository.ArtifactCatalogRepository;
 import com.callinsights.catalogservice.repository.AuditLogRepository;
 import com.callinsights.catalogservice.repository.CallRepository;

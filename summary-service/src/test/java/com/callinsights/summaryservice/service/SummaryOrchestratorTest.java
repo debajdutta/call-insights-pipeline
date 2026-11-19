@@ -1,9 +1,9 @@
 package com.callinsights.summaryservice.service;
 
 import com.callinsights.summaryservice.config.SummaryServiceProperties;
-import com.callinsights.summaryservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.summaryservice.model.CallSummaryGeneratedEvent;
-import com.callinsights.summaryservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallSummaryGeneratedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.summaryservice.model.SummaryArtifact;
 import com.callinsights.summaryservice.model.TranscriptArtifact;
 import com.callinsights.summaryservice.service.provider.SummaryProvider;
