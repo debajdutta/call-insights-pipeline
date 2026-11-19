@@ -19,6 +19,7 @@
     <description>Root build for the Call Insights Pipeline: shared properties and dependency versions</description>
 
     <modules>
+        <module>callinsights-common</module>
         <module>call-generator</module>
         <module>transcription-service</module>
         <module>summary-service</module>
@@ -35,6 +36,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.callinsights</groupId>
+                <artifactId>callinsights-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.anthropic</groupId>
                 <artifactId>anthropic-java</artifactId>
