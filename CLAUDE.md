@@ -32,8 +32,8 @@ CallInsights is a **portfolio project**: an event-driven call transcription, sum
 
 ## Build and test
 
-- Per module until the root POM exists (M0): `mvn -f <service>/pom.xml test`
-- After M0: `mvn -q verify` at the root.
+- One service plus its dependencies: `mvn -pl <service> -am test`
+- Everything: `mvn -q verify` at the root.
 - Whole system locally: `scripts/start-all.sh`, `scripts/status.sh`, `scripts/run-test.sh`, `scripts/stop-all.sh`.
 - Frontend: see `frontend/package.json` for the test and build scripts.
 - Live LLM calls are manual only and never run in CI.
