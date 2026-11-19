@@ -53,7 +53,9 @@ start_service() {
   local log_file="$LOG_DIR/${name}.log"
 
   echo "[$name] building..."
-  if ! (cd "$module_dir" && mvn -q -DskipTests package); then
+  # Build through the root reactor (-am) so callinsights-common is built alongside the
+  # service; a standalone module build cannot resolve it on a clean clone.
+  if ! (cd "$REPO_ROOT" && mvn -q -DskipTests -pl "$name" -am package); then
     echo "[$name] BUILD FAILED - skipping start"
     return 1
   fi
