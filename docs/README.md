@@ -2,7 +2,7 @@
 
 A skill-building microservices project: an event-driven call-transcription/summary/evaluation pipeline with a supervisor UI, built to gain current, demonstrable hands-on depth with Kafka, microservice architecture, and multi-provider LLM integration.
 
-**This is an entirely synthetic rebuild** — own fake call generator, dummy media, own scoring rules. No real [removed]/[removed] code, data, or proprietary logic is used anywhere in this project.
+**This is an entirely synthetic rebuild** — own fake call generator, dummy media, own scoring rules. No real code, data, or proprietary logic from any commercial call-recording product is used anywhere in this project.
 
 See [`docs/SPEC.md`](./SPEC.md) for the full spec (problem statement, service boundaries, event contracts, data model, acceptance criteria), [`docs/TASKS.md`](./TASKS.md) for the Day-1 implementation checklist, and [`docs/API_TESTING.md`](./API_TESTING.md) for curl examples against the Gateway/BFF API.
 

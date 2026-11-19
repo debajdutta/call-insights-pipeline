@@ -2,14 +2,14 @@
 
 ## 0. Purpose & Guardrails
 
-**Purpose:** A skill-building project to gain current, demonstrable hands-on depth with Kafka Streams event orchestration, microservice architecture, multi-provider LLM integration, and a full-stack (Angular + Spring Boot) supervisor tool — closing specific gaps between the resume and target job postings (Kafka Streams named as a preferred skill at [removed] Chase and others).
+**Purpose:** A skill-building project to gain current, demonstrable hands-on depth with Kafka Streams event orchestration, microservice architecture, multi-provider LLM integration, and a full-stack (Angular + Spring Boot) supervisor tool — closing specific skill gaps against current job requirements (Kafka Streams is a commonly listed preferred skill).
 
 **Guardrail (non-negotiable):** This is an entirely **synthetic** rebuild.
 - Own fake call-metadata generator.
 - Own dummy media files.
 - Own template/keyword scoring rules.
-- **Never** [removed]/[removed]'s real code, data, proprietary scoring logic, or credentials.
-- The real [removed] system is referenced only at the architecture-pattern level (event-driven, pluggable storage) — never its implementation.
+- **Never** any real product's code, data, proprietary scoring logic, or credentials.
+- Commercial call-recording products are referenced only at the architecture-pattern level (event-driven, pluggable storage) — never their implementation.
 
 **Resume ground rule (from the broader backlog):** a skill only goes on the resume once this is actually built and run — this SPEC is the design; it is not itself evidence of completion.
 
