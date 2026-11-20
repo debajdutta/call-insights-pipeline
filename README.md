@@ -41,7 +41,7 @@ The backend is one Maven reactor: the root `pom.xml` builds `callinsights-common
 ## Prerequisites
 
 - JDK 21 and Maven 3.9+
-- Docker with Compose v2 (`docker compose`)
+- Docker with Compose v2.20 or later (`docker compose`; the root compose file uses `include`), with about 6 GB of memory for the Docker path
 - Node.js 22.22+ or 24 with npm (for the Angular frontend)
 - An Anthropic API key, only for real transcription and summary generation
 
@@ -58,6 +58,17 @@ mvn -pl summary-service -am test       # one service plus the modules it depends
 Run from the repository root:
 
 ```bash
+export ANTHROPIC_API_KEY="..."   # per terminal session; never commit it
+scripts/docker-up.sh             # or: docker compose up -d --build
+```
+
+Then open the UI at `http://localhost:4200` (gateway at `http://localhost:8086`). Stop with `docker compose down`; add `-v` to also wipe the Mongo and media volumes. Details, volumes and the API key handling are in [docs/DOCKER.md](docs/DOCKER.md).
+
+### Run the services from source
+
+For development and debugging, run the services as host processes instead. Stop the Docker stack first (`docker compose down`); the two cannot run at the same time.
+
+```bash
 export ANTHROPIC_API_KEY="..."          # per terminal session; never commit it
 scripts/start-all.sh                    # starts Kafka, MongoDB, Kafka UI, Mongo Express, then builds and starts the six services and the UI
 scripts/status.sh                       # health of infra, services and UI
@@ -70,6 +81,7 @@ Details, ports and debugging URLs are in [docs/README.md](docs/README.md).
 ## Documentation
 
 - [docs/SPEC.md](docs/SPEC.md): problem statement, service boundaries, event contracts
+- [docs/DOCKER.md](docs/DOCKER.md): running the whole system with Docker Compose
 - [docs/specs/](docs/specs/): one spec per milestone or use case, with acceptance criteria
 - [ROADMAP.md](ROADMAP.md): what is built and what is planned
 - [CLAUDE.md](CLAUDE.md): rules for the AI coding assistant used with human review
