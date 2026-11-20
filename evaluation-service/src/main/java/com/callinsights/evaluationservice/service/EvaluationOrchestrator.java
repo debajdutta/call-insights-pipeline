@@ -1,9 +1,9 @@
 package com.callinsights.evaluationservice.service;
 
 import com.callinsights.evaluationservice.config.EvaluationServiceProperties;
-import com.callinsights.evaluationservice.model.ArtifactRegenerationRequestedEvent;
-import com.callinsights.evaluationservice.model.CallEvaluationGeneratedEvent;
-import com.callinsights.evaluationservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.CallEvaluationGeneratedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.evaluationservice.model.EvaluationArtifact;
 import com.callinsights.evaluationservice.model.TranscriptArtifact;
 import com.fasterxml.jackson.databind.ObjectMapper;

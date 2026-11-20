@@ -1,10 +1,10 @@
 package com.callinsights.catalogservice.config;
 
-import com.callinsights.catalogservice.model.ArtifactDeletedEvent;
-import com.callinsights.catalogservice.model.CallCompletedEvent;
-import com.callinsights.catalogservice.model.CallEvaluationGeneratedEvent;
-import com.callinsights.catalogservice.model.CallSummaryGeneratedEvent;
-import com.callinsights.catalogservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactDeletedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
+import com.callinsights.common.event.CallEvaluationGeneratedEvent;
+import com.callinsights.common.event.CallSummaryGeneratedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;

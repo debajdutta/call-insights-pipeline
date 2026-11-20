@@ -1,7 +1,7 @@
 package com.callinsights.gatewayservice.service;
 
-import com.callinsights.gatewayservice.model.ArtifactDeletedEvent;
-import com.callinsights.gatewayservice.model.ArtifactRegenerationRequestedEvent;
+import com.callinsights.common.event.ArtifactDeletedEvent;
+import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

@@ -2,14 +2,14 @@
 
 ## 0. Purpose & Guardrails
 
-**Purpose:** A skill-building project to gain current, demonstrable hands-on depth with Kafka Streams event orchestration, microservice architecture, multi-provider LLM integration, and a full-stack (Angular + Spring Boot) supervisor tool — closing specific gaps between the resume and target job postings (Kafka Streams named as a preferred skill at [removed] Chase and others).
+**Purpose:** A skill-building project to gain current, demonstrable hands-on depth with Kafka Streams event orchestration, microservice architecture, multi-provider LLM integration, and a full-stack (Angular + Spring Boot) supervisor tool — closing specific skill gaps against current job requirements (Kafka Streams is a commonly listed preferred skill).
 
 **Guardrail (non-negotiable):** This is an entirely **synthetic** rebuild.
 - Own fake call-metadata generator.
 - Own dummy media files.
 - Own template/keyword scoring rules.
-- **Never** [removed]/[removed]'s real code, data, proprietary scoring logic, or credentials.
-- The real [removed] system is referenced only at the architecture-pattern level (event-driven, pluggable storage) — never its implementation.
+- **Never** any real product's code, data, proprietary scoring logic, or credentials.
+- Commercial call-recording products are referenced only at the architecture-pattern level (event-driven, pluggable storage) — never their implementation.
 
 **Resume ground rule (from the broader backlog):** a skill only goes on the resume once this is actually built and run — this SPEC is the design; it is not itself evidence of completion.
 
@@ -102,12 +102,12 @@ Call Generator
 |---|---|---|---|
 | `call-completed` | Call Generator | Transcription Service, Metadata Consumer | callId, agentId, mediaPath, templateId, timestamp |
 | `call-transcript-generated` | Transcription Service | Summary Service, Evaluation Service, Metadata Consumer | callId, agentId, templateId, transcriptPath, version, modelUsed |
-| `call-summary-generated` | Summary Service | Metadata Consumer | callId, summaryPath, version, modelUsed |
-| `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, evaluationPath, version, modelUsed |
-| `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy |
+| `call-summary-generated` | Summary Service | Metadata Consumer | callId, agentId, templateId, summaryPath, version, modelUsed |
+| `call-evaluation-generated` | Evaluation Service | Metadata Consumer | callId, agentId, templateId, evaluationPath, version, modelUsed |
+| `artifact-regeneration-requested` | Gateway/BFF | Transcription/Summary/Evaluation Service (whichever matches artifactType) | callId, artifactType, requestedModel, requestedBy, agentId, templateId |
 | `artifact-deleted` | Gateway/BFF | Metadata Consumer | callId, artifactType, version, deletedBy |
 
-*(Topic/payload names are a Day-1 draft — refine once TASKS.md implementation starts.)*
+*(Topic/payload names started as a Day-1 draft. The payload column lists every field the code sends: `agentId`/`templateId` on the summary, evaluation and regeneration events were added during implementation and may be null on regeneration. The event records are shared by all services from `callinsights-common` (package `com.callinsights.common.event`); topic names are configured in each service's `application.yml`.)*
 
 ### 4.4 Storage
 

@@ -11,7 +11,8 @@ An event-driven call analytics pipeline built as a portfolio project. A syntheti
 | Pipeline: generate, transcribe, summarise, evaluate | Working end to end |
 | Catalog (MongoDB), audit log, JWT login gateway, Angular UI | Working |
 | Run everything with one command (Docker) | Planned (M0b) |
-| Spring AI port, tests and CI | Planned (M0, M1) |
+| Root Maven build, shared event module, unit tests, CI | Built (M0) |
+| Spring AI port | Planned (M1) |
 | LLM evaluation, redaction, RAG, tool calling, MCP, model routing | Planned, see [ROADMAP.md](ROADMAP.md) |
 
 Today the summary and transcription services call the Anthropic Java SDK directly, behind small provider interfaces; evaluation is rule-based.
@@ -33,16 +34,35 @@ Kafka carries events only. Media and versioned JSON artifacts live on the filesy
 
 ## Stack
 
-Java 21, Spring Boot 3.3.4, Kafka (KRaft), MongoDB, Angular. Local infrastructure runs from `infra/docker-compose.yml`.
+Java 21, Spring Boot 3.3.4, Kafka (KRaft), MongoDB, Angular 22. Local infrastructure runs from `infra/docker-compose.yml`.
+
+The backend is one Maven reactor: the root `pom.xml` builds `callinsights-common` (the shared Kafka event records) and the six services.
+
+## Prerequisites
+
+- JDK 21 and Maven 3.9+
+- Docker with Compose v2 (`docker compose`)
+- Node.js 22.22+ or 24 with npm (for the Angular frontend)
+- An Anthropic API key, only for real transcription and summary generation
+
+## Build and test
+
+```bash
+mvn -q verify                          # all modules, unit tests only: no Kafka, MongoDB or API key needed
+mvn -pl summary-service -am test       # one service plus the modules it depends on
+(cd frontend && npm ci && npm run build)
+```
 
 ## Quick start
 
+Run from the repository root:
+
 ```bash
-cd infra && docker-compose up -d        # Kafka, MongoDB, Kafka UI, Mongo Express
 export ANTHROPIC_API_KEY="..."          # per terminal session; never commit it
-scripts/start-all.sh                    # builds and starts the six services and the UI
+scripts/start-all.sh                    # starts Kafka, MongoDB, Kafka UI, Mongo Express, then builds and starts the six services and the UI
+scripts/status.sh                       # health of infra, services and UI
 scripts/run-test.sh                     # one call through the whole pipeline
-scripts/stop-all.sh
+scripts/stop-all.sh                     # stops everything, including infra
 ```
 
 Details, ports and debugging URLs are in [docs/README.md](docs/README.md).

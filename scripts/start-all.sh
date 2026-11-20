@@ -21,12 +21,19 @@ if ! command -v java >/dev/null 2>&1; then
   export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
-if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-  echo "WARNING: ANTHROPIC_API_KEY is not set in this shell."
-  echo "         transcription-service and summary-service will still start, but any"
-  echo "         real generation will fail until the key is set (session-scoped export)."
+key_warning() {
+  [ -n "${ANTHROPIC_API_KEY:-}" ] && return 0
+  echo "************************************************************************"
+  echo "  ANTHROPIC_API_KEY is not set in this shell."
+  echo "  transcription-service and summary-service need it; without it their"
+  echo "  LLM calls fail and the pipeline stops after call generation."
+  echo "  Fix, in this terminal (session only, not a shell profile):"
+  echo "    export ANTHROPIC_API_KEY=<your key>"
+  echo "    scripts/services.sh restart transcription-service summary-service"
+  echo "************************************************************************"
   echo
-fi
+}
+key_warning
 
 echo "=== Docker infra ==="
 (cd "$REPO_ROOT/infra" && docker compose up -d)
@@ -50,15 +57,24 @@ restart_service() {
   pid=$(pgrep -f "${name}-0.1.0-SNAPSHOT.jar" || true)
   if [ -n "$pid" ]; then
     echo "[$name] stopping existing instance (pid $pid)..."
+    # Resume first: a suspended (Ctrl-Z) process ignores SIGTERM until continued
+    kill -CONT $pid 2>/dev/null || true
     kill $pid 2>/dev/null || true
     for i in $(seq 1 10); do
       pgrep -f "${name}-0.1.0-SNAPSHOT.jar" >/dev/null 2>&1 || break
       sleep 1
     done
+    if pgrep -f "${name}-0.1.0-SNAPSHOT.jar" >/dev/null 2>&1; then
+      echo "[$name] did not stop within 10s - forcing (kill -9)"
+      kill -9 $pid 2>/dev/null || true
+      sleep 1
+    fi
   fi
 
   echo "[$name] building..."
-  if ! (cd "$module_dir" && mvn -q -DskipTests package); then
+  # Build through the root reactor (-am) so callinsights-common is built alongside the
+  # service; a standalone module build cannot resolve it on a clean clone.
+  if ! (cd "$REPO_ROOT" && mvn -q -DskipTests -pl "$name" -am package); then
     echo "[$name] BUILD FAILED - skipping start"
     return 1
   fi
@@ -98,3 +114,5 @@ echo "=== Frontend ==="
 echo
 echo "=== Final status ==="
 "$REPO_ROOT/scripts/status.sh"
+echo
+key_warning

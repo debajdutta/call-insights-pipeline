@@ -2,14 +2,14 @@
 
 A skill-building microservices project: an event-driven call-transcription/summary/evaluation pipeline with a supervisor UI, built to gain current, demonstrable hands-on depth with Kafka, microservice architecture, and multi-provider LLM integration.
 
-**This is an entirely synthetic rebuild** — own fake call generator, dummy media, own scoring rules. No real [removed]/[removed] code, data, or proprietary logic is used anywhere in this project.
+**This is an entirely synthetic rebuild** — own fake call generator, dummy media, own scoring rules. No real code, data, or proprietary logic from any commercial call-recording product is used anywhere in this project.
 
 See [`docs/SPEC.md`](./SPEC.md) for the full spec (problem statement, service boundaries, event contracts, data model, acceptance criteria), [`docs/TASKS.md`](./TASKS.md) for the Day-1 implementation checklist, and [`docs/API_TESTING.md`](./API_TESTING.md) for curl examples against the Gateway/BFF API.
 
 ## Stack
 
 - **Frontend:** Angular + TypeScript (Node.js is a build-time toolchain only, not a runtime service)
-- **Backend services:** Java 21 + Spring Boot (Gateway/BFF, Call Generator, Transcription, Summary/Insights, Evaluation, Metadata Consumer)
+- **Backend services:** Java 21 + Spring Boot 3.3.4 (Gateway/BFF, Call Generator, Transcription, Summary/Insights, Evaluation, Metadata Consumer as `catalog-service`), built as one Maven reactor from the root `pom.xml`. The Kafka event records are shared from the `callinsights-common` module (`com.callinsights.common.event`).
 - **Middleware:** Kafka (event orchestration only — media never flows through Kafka)
 - **Storage:** MongoDB (metadata + artifact catalog + audit log), local filesystem/Blob (media + versioned JSON artifacts — source of truth for content)
 - **Local dev:** Docker Compose for Kafka + MongoDB; services run individually via IDE/CLI
@@ -19,17 +19,23 @@ See [`docs/SPEC.md`](./SPEC.md) for the full spec (problem statement, service bo
 Repo name: `call-insights-pipeline`
 
 
+The quickest path is `scripts/start-all.sh` from the repository root (see [Scripts](#scripts)). To run pieces by hand:
+
 ```bash
-cd infra
-docker-compose up -d       # starts Kafka + MongoDB
+(cd infra && docker compose up -d)    # Kafka, MongoDB, Kafka UI, Mongo Express
+mvn -q verify                         # build and unit-test every module (no infra or API key needed)
+mvn -q -DskipTests install            # once, so single-module commands can resolve callinsights-common
+mvn -pl summary-service spring-boot:run   # run one service from the repo root (or run it from the IDE)
 ```
 
-Then run each Spring Boot service individually (`mvn spring-boot:run` or via IDE), and the frontend via:
+A single service and the modules it depends on can be tested with `mvn -pl <service> -am test`. A standalone `mvn -f <service>/pom.xml ...` only works after the root `install` above.
+
+Frontend:
 
 ```bash
 cd frontend
-npm install
-ng serve
+npm ci
+npm start                             # ng serve on http://localhost:4200
 ```
 
 ## Scripts

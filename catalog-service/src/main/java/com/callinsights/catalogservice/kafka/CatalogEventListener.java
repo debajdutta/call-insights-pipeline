@@ -1,10 +1,10 @@
 package com.callinsights.catalogservice.kafka;
 
-import com.callinsights.catalogservice.model.ArtifactDeletedEvent;
-import com.callinsights.catalogservice.model.CallCompletedEvent;
-import com.callinsights.catalogservice.model.CallEvaluationGeneratedEvent;
-import com.callinsights.catalogservice.model.CallSummaryGeneratedEvent;
-import com.callinsights.catalogservice.model.CallTranscriptGeneratedEvent;
+import com.callinsights.common.event.ArtifactDeletedEvent;
+import com.callinsights.common.event.CallCompletedEvent;
+import com.callinsights.common.event.CallEvaluationGeneratedEvent;
+import com.callinsights.common.event.CallSummaryGeneratedEvent;
+import com.callinsights.common.event.CallTranscriptGeneratedEvent;
 import com.callinsights.catalogservice.service.CatalogOrchestrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
