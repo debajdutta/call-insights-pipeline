@@ -1,0 +1,13 @@
+# Build context for the root Dockerfile (all six services). Keeps build output, local data
+# and anything secret out of every image build.
+.git
+**/target
+frontend/
+logs
+media-store
+.env
+**/.env
+**/application.properties
+.claude
+.idea
+.vscode
