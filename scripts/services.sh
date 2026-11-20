@@ -39,11 +39,16 @@ stop_service() {
     return
   fi
   echo "[$name] stopping (pid $pid)..."
+  # Resume first: a suspended (Ctrl-Z) process ignores SIGTERM until continued
+  kill -CONT $pid 2>/dev/null || true
   kill $pid
   for i in $(seq 1 10); do
-    pgrep -f "${name}-0.1.0-SNAPSHOT.jar" >/dev/null 2>&1 || break
+    pgrep -f "${name}-0.1.0-SNAPSHOT.jar" >/dev/null 2>&1 || return 0
     sleep 1
   done
+  echo "[$name] did not stop within 10s - forcing (kill -9)"
+  kill -9 $pid 2>/dev/null || true
+  sleep 1
 }
 
 start_service() {
@@ -79,6 +84,27 @@ start_service() {
   return 1
 }
 
+key_warning() {
+  [ -n "${ANTHROPIC_API_KEY:-}" ] && return 0
+  echo "************************************************************************"
+  echo "  ANTHROPIC_API_KEY is not set in this shell."
+  echo "  transcription-service and summary-service need it; without it their"
+  echo "  LLM calls fail and the pipeline stops after call generation."
+  echo "  Fix, in this terminal (session only, not a shell profile):"
+  echo "    export ANTHROPIC_API_KEY=<your key>"
+  echo "    scripts/services.sh restart transcription-service summary-service"
+  echo "************************************************************************"
+  echo
+}
+
+# True when any target service calls the LLM and so needs the key
+needs_key() {
+  case " $TARGETS " in
+    *" transcription-service "*|*" summary-service "*) return 0 ;;
+  esac
+  return 1
+}
+
 ACTION="${1:-}"
 [ -n "$ACTION" ] || usage
 shift
@@ -86,19 +112,18 @@ TARGETS="${*:-$ALL_SERVICES}"
 
 case "$ACTION" in
   start)
-    if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-      echo "WARNING: ANTHROPIC_API_KEY is not set in this shell - transcription-service and"
-      echo "         summary-service will start but real generation will fail."
-      echo
-    fi
+    needs_key && key_warning
     for name in $TARGETS; do start_service "$name"; done
+    needs_key && key_warning
     ;;
   stop)
     for name in $TARGETS; do stop_service "$name"; done
     ;;
   restart)
+    needs_key && key_warning
     for name in $TARGETS; do stop_service "$name"; done
     for name in $TARGETS; do start_service "$name"; done
+    needs_key && key_warning
     ;;
   *)
     usage

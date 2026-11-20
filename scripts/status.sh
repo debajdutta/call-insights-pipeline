@@ -20,7 +20,7 @@ fi
 check_health() {
   local name="$1" port="$2"
   local code
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${port}/actuator/health" 2>/dev/null)
+  code=$(curl -s -m 5 -o /dev/null -w "%{http_code}" "http://localhost:${port}/actuator/health" 2>/dev/null)
   if [ "$code" = "200" ]; then
     echo "  $name (:$port): UP"
   else
@@ -39,7 +39,7 @@ check_health gateway-service 8086
 
 echo
 echo "=== Frontend ==="
-frontend_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:4200" 2>/dev/null)
+frontend_code=$(curl -s -m 5 -o /dev/null -w "%{http_code}" "http://localhost:4200" 2>/dev/null)
 if [ "$frontend_code" = "200" ]; then
   echo "  frontend (:4200): UP"
 else
