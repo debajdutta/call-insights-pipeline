@@ -13,7 +13,7 @@
 
     <artifactId>callinsights-common</artifactId>
     <name>callinsights-common</name>
-    <description>Shared Kafka event records for the Call Insights Pipeline services (plain JSON, no type headers)</description>
+    <description>Shared Kafka event records (plain JSON, no type headers) and transcript artifact helpers (TranscriptArtifact, ArtifactVersionResolver) for the Call Insights Pipeline services</description>
 
     <dependencies>
         <dependency>
