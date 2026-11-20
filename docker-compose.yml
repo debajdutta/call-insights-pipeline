@@ -5,7 +5,7 @@
 # Cannot run at the same time as the script workflow (scripts/start-all.sh): both use the
 # fixed container names from infra/docker-compose.yml and the same host ports.
 #
-# ANTHROPIC_API_KEY is passed through from the shell that runs compose (value-less entry).
+# The Anthropic API key is passed through from the shell that runs compose (value-less entry).
 # No .env file, no env_file. `docker compose config` prints the resolved key if it is exported.
 name: callinsights-docker
 
