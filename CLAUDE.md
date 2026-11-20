@@ -51,6 +51,6 @@ Needs human: <approvals, a real-key run, decisions>
 ## Decisions in force (change here and in an ADR if they change)
 
 - D1 Framework: stay on Spring Boot 3.3.4 until M1, then Spring Boot 4.x with Spring AI 2.0.
-- D2 Vector store (UC-05): Postgres with pgvector.
+- D2 Vector store (UC-05): Neo4j with LangChain4j, in the knowledge-service only; Spring AI stays in the other services.
 - D3 Providers: Anthropic first, then a local model through Ollama. A second cloud provider is optional.
 - D4 Order: M0 hygiene, M0b Docker, M1 Spring AI port, then use cases.

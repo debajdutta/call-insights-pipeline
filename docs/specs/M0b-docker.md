@@ -148,7 +148,7 @@ Write these tests first where practical.
 - No automated container test is added to CI. The compose checks are the manual ACs below.
 
 ## Out of scope / will not do
-Spring Boot or any framework upgrade, Spring AI (M1). New Maven dependencies or modules. Event contract changes (topic names, event fields), and changes to the `callinsights-common` event package. Merging the Mongo document classes or adding a shared document module. Changing `infra/docker-compose.yml` or existing scripts. Frontend source changes. An nginx `/api` proxy. Kubernetes, registries, image publishing, CI image builds. Any `.env` or `env_file`. Edits to `.github/modernize/`, `logs/`, `media-store/`, `.env`, `application.properties`, `.claude/settings.local.json`. No push, merge or tag.
+Spring Boot or any framework upgrade, Spring AI (M1). New Maven dependencies or modules. Event contract changes (topic names, event fields), and changes to the `callinsights-common` event package. Merging the Mongo document classes or adding a shared document module. Changing `infra/docker-compose.yml` or existing scripts. Frontend source changes. An nginx `/api` proxy. Kubernetes, registries, image publishing, CI image builds. Neo4j or Postgres containers (the UC-05 store, decision D2, arrives with the knowledge-service, not in M0b). Any `.env` or `env_file`. Edits to `.github/modernize/`, `logs/`, `media-store/`, `.env`, `application.properties`, `.claude/settings.local.json`. No push, merge or tag.
 
 ## Risks
 
