@@ -10,7 +10,7 @@ An event-driven call analytics pipeline built as a portfolio project. A syntheti
 | --- | --- |
 | Pipeline: generate, transcribe, summarise, evaluate | Working end to end |
 | Catalog (MongoDB), audit log, JWT login gateway, Angular UI | Working |
-| Run everything with one command (Docker) | Planned (M0b) |
+| Run everything with one command (Docker) | Built (M0b) |
 | Root Maven build, shared event module, unit tests, CI | Built (M0) |
 | Spring AI port | Planned (M1) |
 | LLM evaluation, redaction, RAG, tool calling, MCP, model routing | Planned, see [ROADMAP.md](ROADMAP.md) |
