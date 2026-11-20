@@ -1,5 +1,9 @@
-package com.callinsights.gatewayservice.document;
+package com.callinsights.gatewayservice;
 
+import com.callinsights.gatewayservice.document.ArtifactCatalogDocument;
+import com.callinsights.gatewayservice.document.ArtifactVersionEntry;
+import com.callinsights.gatewayservice.document.AuditLogDocument;
+import com.callinsights.gatewayservice.document.CallDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

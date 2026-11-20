@@ -1,5 +1,9 @@
-package com.callinsights.catalogservice.document;
+package com.callinsights.catalogservice;
 
+import com.callinsights.catalogservice.document.ArtifactCatalogDocument;
+import com.callinsights.catalogservice.document.ArtifactVersionEntry;
+import com.callinsights.catalogservice.document.AuditLogDocument;
+import com.callinsights.catalogservice.document.CallDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
