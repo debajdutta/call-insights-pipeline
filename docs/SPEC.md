@@ -168,20 +168,26 @@ A configuration (not a running service on Day 1) mapping a logical model name to
 
 ```
 call-insights-pipeline/
+├── pom.xml                         # root Maven reactor
+├── Dockerfile                      # all six services, ARG SERVICE
+├── docker-compose.yml              # whole system; includes infra/docker-compose.yml
 ├── docs/
 │   ├── SPEC.md
 │   ├── TASKS.md
-│   └── README.md
+│   ├── README.md
+│   ├── API_TESTING.md
+│   ├── DOCKER.md
+│   └── specs/                      # one spec per milestone or use case
 ├── infra/
-│   └── docker-compose.yml        # Kafka, MongoDB (+ own services in milestone 2)
-├── frontend/                      # Angular + TypeScript
-├── gateway/                       # Spring Boot BFF
-├── call-generator/                # Spring Boot
-├── transcription-service/         # Spring Boot
+│   └── docker-compose.yml          # Kafka, MongoDB, Kafka UI, Mongo Express
+├── frontend/                       # Angular + TypeScript; Dockerfile, nginx.conf
+├── callinsights-common/            # shared event records and artifact helpers
+├── call-generator/                 # Spring Boot
+├── transcription-service/          # Spring Boot
 ├── summary-service/                # Spring Boot
 ├── evaluation-service/             # Spring Boot
-├── metadata-consumer/              # Spring Boot
-└── model-registry/                 # shared config module
+├── catalog-service/                # Spring Boot
+└── gateway-service/                # Spring Boot BFF
 ```
 
 Chosen over multi-repo: easier to demo end-to-end, no cross-repo versioning overhead for a single-developer project at this scale.

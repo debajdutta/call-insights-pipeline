@@ -1,0 +1,169 @@
+# Whole system in containers: infra (included from infra/docker-compose.yml), the six
+# services and the frontend. Start with scripts/docker-up.sh or `docker compose up -d --build`
+# from the repo root. Needs Compose v2.20+ for `include`. See docs/DOCKER.md.
+#
+# Cannot run at the same time as the script workflow (scripts/start-all.sh): both use the
+# fixed container names from infra/docker-compose.yml and the same host ports.
+#
+# The Anthropic API key is passed through from the shell that runs compose (value-less entry).
+# No .env file, no env_file. `docker compose config` prints the resolved key if it is exported.
+name: callinsights-docker
+
+include:
+  - infra/docker-compose.yml
+
+x-service: &service
+  restart: unless-stopped
+  depends_on:
+    kafka:
+      condition: service_healthy
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 60s
+
+services:
+  call-generator:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: call-generator
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CALLGENERATOR_MEDIA_BASEDIRECTORY: /data/media-store
+    volumes:
+      - media-data:/data/media-store
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8081/actuator/health"]
+
+  transcription-service:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: transcription-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      TRANSCRIPTIONSERVICE_MEDIA_BASEDIRECTORY: /data/media-store
+      ANTHROPIC_API_KEY:
+    volumes:
+      - media-data:/data/media-store
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8082/actuator/health"]
+
+  summary-service:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: summary-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SUMMARYSERVICE_MEDIA_BASEDIRECTORY: /data/media-store
+      ANTHROPIC_API_KEY:
+    volumes:
+      - media-data:/data/media-store
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8083/actuator/health"]
+
+  evaluation-service:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: evaluation-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EVALUATIONSERVICE_MEDIA_BASEDIRECTORY: /data/media-store
+    volumes:
+      - media-data:/data/media-store
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8084/actuator/health"]
+
+  catalog-service:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: catalog-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/call-insights
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8085/actuator/health"]
+
+  gateway-service:
+    <<: *service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: gateway-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/call-insights
+      # Pass-through: unset in the shell means unset here, and application.yml defaults apply.
+      JWT_SECRET:
+      SEED_USER_USERNAME:
+      SEED_USER_PASSWORD:
+      GATEWAY_CORS_ALLOWED_ORIGIN:
+    volumes:
+      - media-data:/data/media-store
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8086/actuator/health"]
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    ports:
+      - "4200:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+volumes:
+  media-data:

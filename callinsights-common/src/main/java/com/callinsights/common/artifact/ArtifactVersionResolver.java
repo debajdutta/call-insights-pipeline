@@ -1,6 +1,4 @@
-package com.callinsights.summaryservice.service;
-
-import org.springframework.stereotype.Component;
+package com.callinsights.common.artifact;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,13 +10,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Same filesystem-scan approach as transcription-service's version resolver, plus a
- * latestArtifactPath query: summary-service needs to locate the current transcript file when
- * handling a regeneration request, since that event doesn't carry transcriptPath directly
- * (SPEC.md §4.3's artifact-regeneration-requested schema). Day-1 simplification - see
- * SPEC.md §10 for the caveat on version reuse after delete.
+ * Finds artifact versions by scanning a call directory for {artifactBaseName}_v{n}.json files.
+ * Plain class with no Spring dependency: each service that needs it registers it as a bean in
+ * its own config package.
+ *
+ * <p>{@link #latestArtifactPath} lets summary-service locate the current transcript when handling
+ * a regeneration request, since that event does not carry transcriptPath (SPEC.md section 4.3).
+ *
+ * <p>Day-1 simplification: version numbers are derived from the files present, so a number can be
+ * reused after a delete. That does not yet satisfy SPEC.md section 4.4 ("version numbers are never
+ * reused, even after delete"); see SPEC.md section 10.
  */
-@Component
 public class ArtifactVersionResolver {
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("^.+_v(\\d+)\\.json$");

@@ -4,7 +4,8 @@ import com.callinsights.transcriptionservice.config.TranscriptionServiceProperti
 import com.callinsights.common.event.ArtifactRegenerationRequestedEvent;
 import com.callinsights.common.event.CallCompletedEvent;
 import com.callinsights.common.event.CallTranscriptGeneratedEvent;
-import com.callinsights.transcriptionservice.model.TranscriptArtifact;
+import com.callinsights.common.artifact.ArtifactVersionResolver;
+import com.callinsights.common.artifact.TranscriptArtifact;
 import com.callinsights.transcriptionservice.service.provider.TranscriptionProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

@@ -1,0 +1,9 @@
+{
+  "callId" : "call-synthetic-0001",
+  "agentId" : "agent-001",
+  "templateId" : "TEMPLATE_SALES_CALL",
+  "version" : 1,
+  "modelUsed" : "model-a",
+  "generatedAt" : "2026-01-01T00:00:00Z",
+  "transcriptText" : "Agent: Hello, thanks for calling.\nCustomer: Hi, I have a question about my plan."
+}
