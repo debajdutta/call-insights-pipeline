@@ -8,7 +8,7 @@ What is built and what is planned. All data is synthetic. A row is marked **Buil
 | --- | --- | --- |
 | v0.1 | Kafka pipeline, catalog, gateway with JWT, Angular UI | Built (tag `v0.1-pipeline`) |
 | M0 | Hygiene: root README, root POM, shared module, CI build, public-docs cleanup | Built |
-| M0b | Dockerfiles and one-command startup | Planned |
+| M0b | Dockerfiles and one-command startup (`scripts/docker-up.sh`), see `docs/DOCKER.md` | Built |
 | M1 | Spring Boot 4 and Spring AI 2.0 port behind the existing provider interfaces | Planned |
 
 ## Use cases
