@@ -58,8 +58,8 @@ flowchart TB
     media[("volume media-data at /data/media-store")]
     mdata[("volume mongo-data")]
   end
-  browser -->|":4200"| fe
-  browser -->|":8086, CORS"| gw
+  browser -->|"1. loads the UI files, :4200"| fe
+  browser -->|"2. API calls from the UI running in the browser, :8086, CORS"| gw
   shell -.->|"key, pass-through to transcription-service and summary-service only"| pipe
   pipe --> kafka
   cat --> kafka
@@ -72,6 +72,8 @@ flowchart TB
 ```
 
 kafka-ui (8090) and mongo-express (8091) also start, from the infra file.
+
+The frontend container has no arrows to other services on purpose: nginx only serves the built Angular files. The app then runs in the browser, and the browser calls the gateway directly on port 8086 (allowed by the gateway's CORS setting). A later step can add an nginx `/api` proxy, so the browser talks to one origin and the frontend forwards API calls to the gateway; the diagram would then show an arrow from the frontend to the gateway.
 
 ## Volumes
 
